@@ -921,22 +921,44 @@
 
                     // Handle the 5-player problem: reduce to 4
                     if (count === 5) {
-                        // Find the player (excluding Martha) with the most sessions already scheduled
+                        // Find the player to remove based on:
+                        // 1. How many times they're already scheduled
+                        // 2. How many times they want to play
+                        // Remove the player who has the best "satisfaction ratio"
                         const nonMarthaPlayers = available.filter(p => p.id !== 'martha');
-                        const mostScheduled = nonMarthaPlayers.reduce((max, player) => {
-                            const currentCount = playerSessionCount[player.id] || 0;
-                            const maxCount = playerSessionCount[max.id] || 0;
-                            return currentCount > maxCount ? player : max;
+                        
+                        const playerToRemove = nonMarthaPlayers.reduce((candidate, player) => {
+                            const playerScheduled = playerSessionCount[player.id] || 0;
+                            const playerDesired = player.desiredSessions || 1;
+                            const candidateScheduled = playerSessionCount[candidate.id] || 0;
+                            const candidateDesired = candidate.desiredSessions || 1;
+                            
+                            // Calculate how "satisfied" each player already is
+                            // If someone wanted 4 sessions and has 2, they're 50% satisfied
+                            // If someone wanted 1 session and has 1, they're 100% satisfied
+                            const playerSatisfaction = playerScheduled / playerDesired;
+                            const candidateSatisfaction = candidateScheduled / candidateDesired;
+                            
+                            // Remove the player who is MORE satisfied (closer to their goal)
+                            // If tied, remove the one with more absolute sessions
+                            if (Math.abs(playerSatisfaction - candidateSatisfaction) < 0.1) {
+                                return playerScheduled > candidateScheduled ? player : candidate;
+                            }
+                            return playerSatisfaction > candidateSatisfaction ? player : candidate;
                         });
                         
-                        removedPlayer = mostScheduled;
-                        available = available.filter(p => p.id !== mostScheduled.id);
+                        removedPlayer = playerToRemove;
+                        available = available.filter(p => p.id !== playerToRemove.id);
                         count = available.length;
+                        
+                        const scheduledCount = playerSessionCount[playerToRemove.id] || 0;
+                        const desiredCount = playerToRemove.desiredSessions || 1;
                         
                         fivePlayerAdjustments.push({
                             session: slotAnalysis.slot,
-                            removedPlayer: mostScheduled.name,
-                            sessionCount: playerSessionCount[mostScheduled.id] || 0
+                            removedPlayer: playerToRemove.name,
+                            sessionCount: scheduledCount,
+                            desiredCount: desiredCount
                         });
                     }
 
@@ -1552,7 +1574,7 @@
                                         borderLeft: '3px solid var(--terracotta)',
                                         fontSize: '14px'
                                     }}>
-                                        <strong>📝 Note:</strong> We had 5 available. I eliminated {adjustment.removedPlayer.split(' ')[0]} because {adjustment.sessionCount === 0 ? 'they would have the fewest conflicts' : adjustment.sessionCount === 1 ? 'they already have 1 other session this week' : `they already have ${adjustment.sessionCount} other sessions this week`}.
+                                        <strong>📝 Note:</strong> We had 5 available. I eliminated {adjustment.removedPlayer.split(' ')[0]} because {adjustment.sessionCount === 0 ? 'they would have the fewest conflicts' : adjustment.sessionCount >= adjustment.desiredCount ? `they already have ${adjustment.sessionCount} sessions (wanted ${adjustment.desiredCount})` : `they have ${adjustment.sessionCount} of their desired ${adjustment.desiredCount} sessions`}.
                                     </div>
                                 )}
                                 
