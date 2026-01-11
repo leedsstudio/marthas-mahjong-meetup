@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martha's Mahjong Scheduler</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #FFF8F0;
+            --sage: #8B9D83;
+            --forest: #3D5A3C;
+            --terracotta: #C85A3D;
+            --charcoal: #2C2C2C;
+            --gold: #D4A574;
+            --soft-white: #FEFEFE;
+            --mahjong-green: #2D5A3F;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--mahjong-green) 0%, #1a3d2b 100%);
+            color: var(--charcoal);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 100px,
+                    rgba(255, 255, 255, 0.02) 100px,
+                    rgba(255, 255, 255, 0.02) 200px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '🀄 🀅 🀆 🀀 🀁 🀂 🀃 🀙 🀚 🀛 🀜 🀝 🀇 🀈 🀉 🀊 🀋 🀐 🀑 🀒 🀓 🀔 🀄 🀅 🀆 🀃 🀙 🀚 🀛 🀇 🀈 🀉 🀐 🀑 🀒 🀀 🀁 🀂 🀃 🀄 🀅 🀆 🀇 🀈 🀉 🀙 🀚 🀛 🀜 🀝 🀞 🀐 🀑 🀒 🀓 🀔 🀀 🀁 🀂 🀃 🀄 🀅 🀆 🀙 🀚 🀛 🀇 🀈 🀉 🀐 🀑 🀒 🀀 🀁 🀂 🀃 🀙 🀚 🀛 🀜 🀝 🀇 🀈 🀉 🀊 🀋 🀐 🀑 🀒 🀓 🀔';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            font-size: 70px;
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+            line-height: 110px;
+            word-spacing: 35px;
+            white-space: pre-wrap;
+            text-align: justify;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 20px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--terracotta), var(--gold));
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--sage);
+            font-weight: 500;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(139, 157, 131, 0.2);
+        }
+
+        .card-header {
+            font-family: 'Crimson Pro', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-number {
+            background: var(--terracotta);
+            color: var(--soft-white);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--forest);
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="time"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(139, 157, 131, 0.3);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            background: var(--cream);
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--sage);
+            background: var(--soft-white);
+        }
+
+        .time-slot-row {
+            display: grid;
+            grid-template-columns: 150px 140px 140px 60px;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--forest);
+            color: var(--soft-white);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--sage);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(61, 90, 60, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--terracotta);
+            color: var(--soft-white);
+        }
+
+        .btn-secondary:hover {
+            background: #A64932;
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 2px solid var(--terracotta);
+            color: var(--terracotta);
+            padding: 10px 20px;
+        }
+
+        .btn-ghost:hover {
+            background: var(--terracotta);
+            color: var(--soft-white);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .player-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--cream);
+            border-radius: 8px;
+            border: 1px solid rgba(139, 157, 131, 0.2);
+        }
+
+        .player-item input[type="text"] {
+            flex: 1;
+            background: var(--soft-white);
+        }
+
+        .share-link-box {
+            background: var(--cream);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px dashed var(--sage);
+            text-align: center;
+        }
+
+        .share-link {
+            font-family: 'Courier New', monospace;
+            background: var(--soft-white);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--forest);
+            font-size: 14px;
+            word-break: break-all;
+            display: block;
+            margin: 12px 0;
+            border: 1px solid rgba(139, 157, 131, 0.3);
+        }
+
+        .availability-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(61, 90, 60, 0.1);
+        }
+
+        .availability-table th {
+            background: var(--forest);
+            color: var(--soft-white);
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .availability-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(139, 157, 131, 0.15);
+            background: var(--soft-white);
+        }
+
+        .availability-table tbody tr:hover {
+            background: var(--cream);
+        }
+
+        .availability-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--forest);
+        }
+
+        .slot-card {
+            background: var(--soft-white);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--sage);
+            transition: all 0.3s ease;
+        }
+
+        .slot-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 16px rgba(61, 90, 60, 0.12);
+        }
+
+        .slot-card.optimal {
+            border-left-color: var(--forest);
+            background: linear-gradient(135deg, var(--soft-white) 0%, rgba(139, 157, 131, 0.05) 100%);
+        }
+
+        .slot-card.awkward {
+            border-left-color: var(--terracotta);
+            opacity: 0.7;
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .slot-time {
+            font-weight: 700;
+            color: var(--forest);
+            font-size: 18px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .slot-count {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--terracotta);
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .slot-players {
+            color: var(--sage);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .recommendation-box {
+            background: linear-gradient(135deg, rgba(139, 157, 131, 0.15) 0%, rgba(212, 165, 116, 0.15) 100%);
+            padding: 28px;
+            border-radius: 12px;
+            border: 2px solid var(--gold);
+            margin: 24px 0;
+        }
+
+        .recommendation-box h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 24px;
+            color: var(--forest);
+            margin-bottom: 12px;
+        }
+
+        .coverage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .coverage-card {
+            background: var(--soft-white);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(139, 157, 131, 0.2);
+        }
+
+        .player-assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .player-assignment-card {
+            background: var(--cream);
+            padding: 14px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .player-assignment-card.multiple-sessions {
+            border-color: var(--terracotta);
+            background: linear-gradient(135deg, var(--cream) 0%, rgba(200, 90, 61, 0.08) 100%);
+        }
+
+        .player-name {
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .session-badge {
+            display: inline-block;
+            background: var(--sage);
+            color: var(--soft-white);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .final-plan {
+            background: var(--soft-white);
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid var(--forest);
+            margin-top: 24px;
+        }
+
+        .table-assignment {
+            background: var(--cream);
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--terracotta);
+        }
+
+        .table-assignment-header {
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: rgba(139, 157, 131, 0.1);
+            border-color: var(--sage);
+            color: var(--forest);
+        }
+
+        .alert-warning {
+            background: rgba(200, 90, 61, 0.1);
+            border-color: var(--terracotta);
+            color: var(--charcoal);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--soft-white);
+            font-style: italic;
+        }
+
+        .session-selector {
+            display: grid;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .session-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--cream);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .session-option:hover {
+            border-color: var(--sage);
+            transform: translateX(4px);
+        }
+
+        .session-option.selected {
+            border-color: var(--forest);
+            background: rgba(139, 157, 131, 0.15);
+        }
+
+        .session-option input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .time-slot-row {
+                grid-template-columns: 1fr;
+            }
+
+            .availability-table {
+                font-size: 13px;
+            }
+
+            .availability-table th,
+            .availability-table td {
+                padding: 10px 8px;
+            }
+
+            .coverage-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Helper function to format times in 12-hour format
+        const formatTime = (time24) => {
+            if (!time24) return '';
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            return `${hour12}:${minutes} ${ampm}`;
+        };
+
+        // Utility functions for localStorage
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        
+        const saveToStorage = (key, data) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                console.error('Storage error:', error);
+            }
+        };
+
+        const loadFromStorage = (key) => {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch (error) {
+                console.error('Storage error:', error);
+                return null;
+            }
+        };
+
+        // Main App Component
+        function App() {
+            const [view, setView] = useState('martha');
+            const [weekId, setWeekId] = useState(null);
+            const [weekData, setWeekData] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('week');
+                
+                if (id) {
+                    setWeekId(id);
+                    setView('player');
+                    loadWeekData(id);
+                } else {
+                    setView('martha');
+                    setLoading(false);
+                }
+            }, []);
+
+            const loadWeekData = (id) => {
+                setLoading(true);
+                const data = loadFromStorage(`week_${id}`);
+                if (data) {
+                    setWeekData(data);
+                }
+                setLoading(false);
+            };
+
+            if (loading) {
+                return (
+                    <div className="app-container">
+                        <div className="loading">Loading...</div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="app-container">
+                    <header className="header">
+                        <h1>🀄 Martha's Mahjong</h1>
+                        <p className="subtitle">Weekly Game Scheduler</p>
+                    </header>
+
+                    {view === 'martha' ? (
+                        <MarthaView onWeekCreated={(id, data) => {
+                            setWeekId(id);
+                            setWeekData(data);
+                        }} />
+                    ) : (
+                        <PlayerView weekId={weekId} weekData={weekData} onRefresh={() => loadWeekData(weekId)} />
+                    )}
+                </div>
+            );
+        }
+
+        // Martha's Setup View
+        function MarthaView({ onWeekCreated }) {
+            const [step, setStep] = useState(1);
+            const [showCreateForm, setShowCreateForm] = useState(false);
+            const [weekName, setWeekName] = useState('');
+            const [timeSlots, setTimeSlots] = useState([{ id: generateId(), day: '', startTime: '', endTime: '' }]);
+            const [players, setPlayers] = useState([
+                'Ann Roberts',
+                'Courtney Klinge Prosnitz',
+                'Holly Johnson',
+                'Jenny Emerson',
+                'Joanna Thomson',
+                'Marie Crouch',
+                'Mindy Henderson',
+                'Suzanne Levit',
+                'Tracy Leeds',
+                'Tricia Sellman'
+            ].sort().map(name => ({ id: generateId(), name })));
+            const [newPlayerName, setNewPlayerName] = useState('');
+            const [shareLink, setShareLink] = useState('');
+            const [weekId, setWeekId] = useState(null);
+            const [optimization, setOptimization] = useState(null);
+            const [marthaPreference, setMarthaPreference] = useState(null);
+            const [finalPlan, setFinalPlan] = useState(null);
+
+            const addTimeSlot = () => {
+                setTimeSlots([...timeSlots, { id: generateId(), day: '', startTime: '', endTime: '' }]);
+            };
+
+            const updateTimeSlot = (id, field, value) => {
+                setTimeSlots(timeSlots.map(slot => 
+                    slot.id === id ? { ...slot, [field]: value } : slot
+                ));
+            };
+
+            const removeTimeSlot = (id) => {
+                if (timeSlots.length > 1) {
+                    setTimeSlots(timeSlots.filter(slot => slot.id !== id));
+                }
+            };
+
+            const addPlayer = () => {
+                if (newPlayerName.trim()) {
+                    const newPlayers = [...players, { id: generateId(), name: newPlayerName.trim() }];
+                    newPlayers.sort((a, b) => a.name.localeCompare(b.name));
+                    setPlayers(newPlayers);
+                    setNewPlayerName('');
+                }
+            };
+
+            const removePlayer = (id) => {
+                setPlayers(players.filter(p => p.id !== id));
+            };
+
+            const createWeek = () => {
+                const id = weekId || generateId();
+                const validSlots = timeSlots.filter(s => s.day && s.startTime && s.endTime);
+                
+                const existingData = loadFromStorage(`week_${id}`);
+                
+                const weekData = {
+                    id: id,
+                    name: weekName,
+                    timeSlots: validSlots,
+                    players: players,
+                    responses: existingData?.responses || {},
+                    createdAt: existingData?.createdAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                saveToStorage(`week_${id}`, weekData);
+                
+                const link = `${window.location.href.split('?')[0]}?week=${id}`;
+                setShareLink(link);
+                setWeekId(id);
+                onWeekCreated(id, weekData);
+                setShowCreateForm(false);
+                setStep(2);
+            };
+
+            const copyLink = () => {
+                navigator.clipboard.writeText(shareLink);
+                alert('Link copied to clipboard!');
+            };
+
+            const loadResponses = () => {
+                const data = loadFromStorage(`week_${weekId}`);
+                if (data) {
+                    calculateOptimization(data);
+                    setStep(3);
+                }
+            };
+
+            const calculateOptimization = (data) => {
+                const slots = data.timeSlots;
+                const playerResponses = data.responses;
+                
+                const slotAnalysis = slots.map(slot => {
+                    const available = [];
+                    const maybe = [];
+                    Object.entries(playerResponses).forEach(([playerId, response]) => {
+                        const player = data.players.find(p => p.id === playerId);
+                        if (!player) return;
+                        
+                        if (response.availability && response.availability[slot.id]) {
+                            available.push({
+                                ...player,
+                                desiredSessions: response.desiredSessions || 1,
+                                note: response.timeNotes?.[slot.id] || ''
+                            });
+                        } else if (response.maybeSlots && response.maybeSlots[slot.id]) {
+                            maybe.push({
+                                ...player,
+                                desiredSessions: response.desiredSessions || 1,
+                                note: response.timeNotes?.[slot.id] || ''
+                            });
+                        }
+                    });
+
+                    const count = available.length;
+                    const totalCount = count + maybe.length;
+                    const countWithMartha = count + 1; // Martha always plays since she hosts
+                    let rating = '⚠️';
+                    let status = 'minimum';
+                    let description = '';
+
+                    if (countWithMartha === 8) {
+                        rating = '⭐⭐⭐';
+                        status = 'optimal';
+                        description = 'Perfect! Two tables of 4+4';
+                    } else if (countWithMartha === 7) {
+                        rating = '⭐⭐';
+                        status = 'good';
+                        description = 'Two tables: 4+3';
+                    } else if (countWithMartha === 6) {
+                        rating = '⭐⭐';
+                        status = 'good';
+                        description = 'Two tables: 3+3';
+                    } else if (countWithMartha === 5) {
+                        rating = '⭐';
+                        status = 'good';
+                        description = 'One table: 5 players';
+                    } else if (countWithMartha === 4) {
+                        rating = '⭐';
+                        status = 'good';
+                        description = 'One full table';
+                    } else if (countWithMartha === 3) {
+                        rating = '⭐';
+                        status = 'playable';
+                        description = 'One table (playable)';
+                    } else if (countWithMartha === 2) {
+                        rating = '⚠️';
+                        status = 'minimum';
+                        description = 'Too few players';
+                    }
+
+                    if (maybe.length > 0 && totalCount + 1 >= 6) {
+                        description += ` (+${maybe.length} maybe)`;
+                    }
+
+                    return {
+                        slot,
+                        available,
+                        maybe,
+                        count,
+                        totalCount,
+                        rating,
+                        status,
+                        description
+                    };
+                });
+
+                slotAnalysis.sort((a, b) => b.count - a.count);
+
+                const scenarios = [];
+                for (let i = 1; i <= Math.min(slotAnalysis.length, 4); i++) {
+                    const topSlots = slotAnalysis.slice(0, i);
+                    const covered = new Set();
+                    const multiplePlay = [];
+
+                    topSlots.forEach(sa => {
+                        sa.available.forEach(p => {
+                            if (covered.has(p.id)) {
+                                multiplePlay.push(p.name);
+                            } else {
+                                covered.add(p.id);
+                            }
+                        });
+                    });
+
+                    scenarios.push({
+                        slots: topSlots,
+                        coverageCount: covered.size,
+                        totalResponses: Object.keys(playerResponses).filter(id => !playerResponses[id].noneWork).length,
+                        multiplePlay
+                    });
+                }
+
+                setOptimization({
+                    slotAnalysis,
+                    scenarios,
+                    totalResponses: Object.keys(playerResponses).length,
+                    noneWorkCount: Object.values(playerResponses).filter(r => r.noneWork).length,
+                    respondedPlayers: data.players.filter(p => Object.keys(playerResponses).includes(p.id)),
+                    notRespondedPlayers: data.players.filter(p => !Object.keys(playerResponses).includes(p.id)),
+                    noneWorkPlayers: data.players.filter(p => playerResponses[p.id]?.noneWork)
+                });
+            };
+
+            const selectSessions = (count) => {
+                setMarthaPreference(count);
+                const selectedSlots = optimization.slotAnalysis.slice(0, count);
+                const result = assignPlayersToSessions(selectedSlots);
+                
+                // Sort sessions chronologically by day of week
+                const dayOrder = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7 };
+                const sessionsWithAssignments = selectedSlots.map((sa, idx) => ({
+                    ...sa,
+                    tables: result.assignments[idx]
+                }));
+                sessionsWithAssignments.sort((a, b) => (dayOrder[a.slot.day] || 0) - (dayOrder[b.slot.day] || 0));
+                
+                setFinalPlan({
+                    sessions: sessionsWithAssignments,
+                    fivePlayerAdjustments: result.fivePlayerAdjustments
+                });
+                
+                setStep(4);
+            };
+
+            const assignPlayersToSessions = (selectedSlots) => {
+                const playerSessionCount = {};
+                const assignments = [];
+                const fivePlayerAdjustments = []; // Track when we remove someone due to 5-player problem
+                
+                // Add Martha as a player (she hosts so she always plays)
+                const martha = { id: 'martha', name: 'Martha', desiredSessions: 10 };
+
+                selectedSlots.forEach((slotAnalysis, sessionIdx) => {
+                    // Martha is always in the session since she's hosting
+                    let available = [martha, ...slotAnalysis.available];
+                    
+                    available.sort((a, b) => {
+                        const aCount = playerSessionCount[a.id] || 0;
+                        const bCount = playerSessionCount[b.id] || 0;
+                        if (aCount !== bCount) return aCount - bCount;
+                        return (b.desiredSessions || 1) - (a.desiredSessions || 1);
+                    });
+
+                    let count = available.length;
+                    let removedPlayer = null;
+
+                    // Handle the 5-player problem: reduce to 4
+                    if (count === 5) {
+                        // Find the player (excluding Martha) with the most sessions already scheduled
+                        const nonMarthaPlayers = available.filter(p => p.id !== 'martha');
+                        const mostScheduled = nonMarthaPlayers.reduce((max, player) => {
+                            const currentCount = playerSessionCount[player.id] || 0;
+                            const maxCount = playerSessionCount[max.id] || 0;
+                            return currentCount > maxCount ? player : max;
+                        });
+                        
+                        removedPlayer = mostScheduled;
+                        available = available.filter(p => p.id !== mostScheduled.id);
+                        count = available.length;
+                        
+                        fivePlayerAdjustments.push({
+                            session: slotAnalysis.slot,
+                            removedPlayer: mostScheduled.name,
+                            sessionCount: playerSessionCount[mostScheduled.id] || 0
+                        });
+                    }
+
+                    const tables = [];
+
+                    if (count >= 6 && count <= 8) {
+                        const table1Size = Math.ceil(count / 2);
+                        tables.push(available.slice(0, table1Size));
+                        tables.push(available.slice(table1Size));
+                    } else if (count >= 2 && count <= 4) {
+                        tables.push(available);
+                    }
+
+                    available.forEach(p => {
+                        playerSessionCount[p.id] = (playerSessionCount[p.id] || 0) + 1;
+                    });
+
+                    assignments.push(tables);
+                });
+
+                return { assignments, fivePlayerAdjustments };
+            };
+
+            if (step === 1) {
+                const existingWeeks = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('week_')) {
+                        const weekData = loadFromStorage(key);
+                        if (weekData) {
+                            existingWeeks.push(weekData);
+                        }
+                    }
+                }
+
+                return (
+                    <>
+                        {existingWeeks.length > 0 && (
+                            <div className="card" style={{ marginBottom: '24px', background: 'rgba(139, 157, 131, 0.1)' }}>
+                                <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '20px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                    Your Recent Schedules
+                                </h3>
+                                {existingWeeks.map(week => {
+                                    const responseCount = Object.keys(week.responses || {}).length;
+                                    const totalPlayers = week.players.length;
+                                    const respondedIds = Object.keys(week.responses || {});
+                                    const notResponded = week.players.filter(p => !respondedIds.includes(p.id));
+                                    
+                                    return (
+                                        <div key={week.id} style={{ 
+                                            padding: '16px', 
+                                            background: 'var(--soft-white)', 
+                                            marginBottom: '12px', 
+                                            borderRadius: '8px',
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px' }}>{week.name}</div>
+                                                    <div style={{ fontSize: '13px', color: 'var(--sage)' }}>
+                                                        {responseCount} of {totalPlayers} responded
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="btn btn-secondary btn-small"
+                                                    onClick={() => {
+                                                        setWeekId(week.id);
+                                                        const data = loadFromStorage(`week_${week.id}`);
+                                                        if (data) {
+                                                            calculateOptimization(data);
+                                                            setStep(3);
+                                                        }
+                                                    }}
+                                                >
+                                                    View Responses
+                                                </button>
+                                            </div>
+                                            
+                                            {responseCount > 0 && (
+                                                <div style={{ marginTop: '12px', padding: '12px', background: 'var(--cream)', borderRadius: '6px', fontSize: '13px' }}>
+                                                    <div style={{ fontWeight: 600, color: 'var(--forest)', marginBottom: '6px' }}>
+                                                        ✓ Responded: {week.players.filter(p => respondedIds.includes(p.id)).map(p => p.name).join(', ')}
+                                                    </div>
+                                                    {notResponded.length > 0 && (
+                                                        <div style={{ color: 'var(--sage)' }}>
+                                                            ⏳ Waiting: {notResponded.map(p => p.name).join(', ')}
+                                                        </div>
+                                                    )}
+                                                    <div style={{ marginTop: '8px', fontSize: '12px', fontStyle: 'italic', color: 'var(--sage)' }}>
+                                                        Last updated: {new Date().toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                                    <button
+                                        className="btn btn-ghost"
+                                        onClick={() => {
+                                            const data = loadFromStorage(`week_${existingWeeks[0].id}`);
+                                            if (data) {
+                                                setWeekId(data.id);
+                                                setWeekName(data.name);
+                                                setTimeSlots(data.timeSlots);
+                                                setPlayers(data.players);
+                                                setShowCreateForm(true);
+                                                setStep(1);
+                                            }
+                                        }}
+                                    >
+                                        ✏️ Edit Existing Week
+                                    </button>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            setWeekId(null);
+                                            setWeekName('');
+                                            setTimeSlots([{ id: generateId(), day: '', startTime: '', endTime: '' }]);
+                                            setShowCreateForm(true);
+                                        }}
+                                    >
+                                        + Create New Week
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {(existingWeeks.length === 0 || showCreateForm) && (
+                        <div className="card">
+                        <div className="card-header">
+                            <span className="step-number">1</span>
+                            {weekId ? 'Edit This Week\'s Schedule' : 'Set Up This Week\'s Schedule'}
+                        </div>
+
+                        {weekId && (
+                            <div className="alert alert-info" style={{ marginBottom: '20px' }}>
+                                📝 Editing existing schedule. Player responses will be preserved.
+                            </div>
+                        )}
+
+                        <div className="form-group">
+                            <label>Week Starting</label>
+                            <input
+                                type="date"
+                                value={weekName ? weekName.replace('Week of ', '').split(' ').slice(0, 3).join(' ') : ''}
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        const date = new Date(e.target.value + 'T00:00:00');
+                                        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+                                        const formattedDate = date.toLocaleDateString('en-US', options);
+                                        setWeekName(`Week of ${formattedDate}`);
+                                    } else {
+                                        setWeekName('');
+                                    }
+                                }}
+                                style={{ 
+                                    padding: '12px 16px',
+                                    border: '2px solid rgba(139, 157, 131, 0.3)',
+                                    borderRadius: '8px',
+                                    fontFamily: 'DM Sans, sans-serif',
+                                    fontSize: '15px',
+                                    background: 'var(--cream)',
+                                    color: 'var(--charcoal)',
+                                    width: '100%'
+                                }}
+                            />
+                            {weekName && (
+                                <div style={{ marginTop: '8px', fontSize: '14px', color: 'var(--sage)', fontStyle: 'italic' }}>
+                                    Will be named: "{weekName}"
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="form-group">
+                            <label>Your Available Time Slots</label>
+                            {timeSlots.map((slot) => (
+                                <div key={slot.id} className="time-slot-row">
+                                    <select
+                                        value={slot.day}
+                                        onChange={(e) => updateTimeSlot(slot.id, 'day', e.target.value)}
+                                        style={{ background: 'var(--cream)' }}
+                                    >
+                                        <option value="">Day...</option>
+                                        <option value="Monday">Monday</option>
+                                        <option value="Tuesday">Tuesday</option>
+                                        <option value="Wednesday">Wednesday</option>
+                                        <option value="Thursday">Thursday</option>
+                                        <option value="Friday">Friday</option>
+                                        <option value="Saturday">Saturday</option>
+                                        <option value="Sunday">Sunday</option>
+                                    </select>
+                                    <select
+                                        value={slot.startTime}
+                                        onChange={(e) => updateTimeSlot(slot.id, 'startTime', e.target.value)}
+                                        style={{ background: 'var(--cream)' }}
+                                    >
+                                        <option value="">Start...</option>
+                                        <option value="08:00">8:00 AM</option>
+                                        <option value="08:30">8:30 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="09:30">9:30 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="10:30">10:30 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="11:30">11:30 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="12:30">12:30 PM</option>
+                                        <option value="13:00">1:00 PM</option>
+                                        <option value="13:30">1:30 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="14:30">2:30 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="15:30">3:30 PM</option>
+                                        <option value="16:00">4:00 PM</option>
+                                        <option value="16:30">4:30 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="17:30">5:30 PM</option>
+                                        <option value="18:00">6:00 PM</option>
+                                        <option value="18:30">6:30 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="19:30">7:30 PM</option>
+                                        <option value="20:00">8:00 PM</option>
+                                        <option value="20:30">8:30 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                    </select>
+                                    <select
+                                        value={slot.endTime}
+                                        onChange={(e) => updateTimeSlot(slot.id, 'endTime', e.target.value)}
+                                        style={{ background: 'var(--cream)' }}
+                                    >
+                                        <option value="">End...</option>
+                                        <option value="08:30">8:30 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="09:30">9:30 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="10:30">10:30 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="11:30">11:30 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="12:30">12:30 PM</option>
+                                        <option value="13:00">1:00 PM</option>
+                                        <option value="13:30">1:30 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="14:30">2:30 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="15:30">3:30 PM</option>
+                                        <option value="16:00">4:00 PM</option>
+                                        <option value="16:30">4:30 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="17:30">5:30 PM</option>
+                                        <option value="18:00">6:00 PM</option>
+                                        <option value="18:30">6:30 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="19:30">7:30 PM</option>
+                                        <option value="20:00">8:00 PM</option>
+                                        <option value="20:30">8:30 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                        <option value="21:30">9:30 PM</option>
+                                        <option value="22:00">10:00 PM</option>
+                                    </select>
+                                    <button
+                                        className="btn btn-ghost btn-small"
+                                        onClick={() => removeTimeSlot(slot.id)}
+                                        disabled={timeSlots.length === 1}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button className="btn btn-secondary btn-small" onClick={addTimeSlot}>
+                                + Add Time Slot
+                            </button>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Players (Alphabetical)</label>
+                            <div className="player-list">
+                                {players.map(player => (
+                                    <div key={player.id} className="player-item">
+                                        <span style={{ flex: 1, padding: '8px' }}>{player.name}</span>
+                                        <button
+                                            className="btn btn-ghost btn-small"
+                                            onClick={() => removePlayer(player.id)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ marginTop: '12px', display: 'flex', gap: '12px' }}>
+                                <input
+                                    type="text"
+                                    value={newPlayerName}
+                                    onChange={(e) => setNewPlayerName(e.target.value)}
+                                    placeholder="Add new player"
+                                    onKeyPress={(e) => e.key === 'Enter' && addPlayer()}
+                                />
+                                <button className="btn btn-secondary" onClick={addPlayer}>
+                                    Add Player
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            className="btn btn-primary"
+                            onClick={createWeek}
+                            disabled={!weekName || timeSlots.every(s => !s.day)}
+                        >
+                            {weekId ? 'Update Schedule' : 'Create Schedule & Generate Link'}
+                        </button>
+                    </div>
+                    )}
+                    </>
+                );
+            }
+
+            if (step === 2) {
+                return (
+                    <div className="card">
+                        <div className="card-header">
+                            <span className="step-number">2</span>
+                            Share With Players
+                        </div>
+
+                        <div className="alert alert-info">
+                            Schedule created! Share this link with your players via text or email.
+                        </div>
+
+                        <div className="share-link-box">
+                            <p style={{ marginBottom: '12px', fontWeight: 600 }}>Share this link:</p>
+                            <div className="share-link">{shareLink}</div>
+                            <button className="btn btn-primary" onClick={copyLink}>
+                                📋 Copy Link
+                            </button>
+                        </div>
+
+                        <div style={{ marginTop: '32px', textAlign: 'center' }}>
+                            <p style={{ marginBottom: '16px', color: 'var(--sage)' }}>
+                                Once players have responded, come back to see the optimization.
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                <button className="btn btn-secondary" onClick={loadResponses}>
+                                    View Responses & Optimization →
+                                </button>
+                                <button 
+                                    className="btn btn-ghost"
+                                    onClick={() => {
+                                        const data = loadFromStorage(`week_${weekId}`);
+                                        if (data) {
+                                            setWeekName(data.name);
+                                            setTimeSlots(data.timeSlots);
+                                            setPlayers(data.players);
+                                            setShowCreateForm(true);
+                                            setStep(1);
+                                        }
+                                    }}
+                                >
+                                    ✏️ Edit Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 3 && optimization) {
+                return (
+                    <>
+                        <div className="card">
+                            <div className="card-header">
+                                <span className="step-number">3</span>
+                                Player Availability Analysis
+                            </div>
+
+                            <div style={{ 
+                                fontSize: '24px', 
+                                fontWeight: 700, 
+                                color: 'var(--forest)', 
+                                marginBottom: '20px',
+                                fontFamily: 'Crimson Pro, serif'
+                            }}>
+                                {(() => {
+                                    const data = loadFromStorage(`week_${weekId}`);
+                                    return data?.name || '';
+                                })()}
+                            </div>
+
+                            <div style={{ marginBottom: '16px', textAlign: 'right' }}>
+                                <button 
+                                    className="btn btn-ghost btn-small"
+                                    onClick={() => {
+                                        const data = loadFromStorage(`week_${weekId}`);
+                                        if (data) {
+                                            setWeekName(data.name);
+                                            setTimeSlots(data.timeSlots);
+                                            setPlayers(data.players);
+                                            setShowCreateForm(true);
+                                            setStep(1);
+                                        }
+                                    }}
+                                >
+                                    ✏️ Edit Schedule
+                                </button>
+                            </div>
+
+                            <div className="alert alert-info">
+                                {(() => {
+                                    const totalPlayers = optimization.respondedPlayers.length + optimization.notRespondedPlayers.length;
+                                    const allResponded = optimization.notRespondedPlayers.length === 0;
+                                    
+                                    if (allResponded && optimization.noneWorkCount === 0) {
+                                        return <strong>All players have responded, Martha!</strong>;
+                                    } else if (allResponded && optimization.noneWorkCount > 0) {
+                                        const noneWorkNames = optimization.noneWorkPlayers.map(p => p.name).join(' and ');
+                                        return (
+                                            <>
+                                                <strong>All players have responded, Martha!</strong>
+                                                {' '}
+                                                <span style={{ color: 'var(--terracotta)' }}>
+                                                    {noneWorkNames} {optimization.noneWorkCount === 1 ? 'has' : 'have'} responded but cannot play at all this week.
+                                                </span>
+                                            </>
+                                        );
+                                    } else {
+                                        const waitingNames = optimization.notRespondedPlayers.map(p => p.name).join(' and ');
+                                        return (
+                                            <>
+                                                <strong>{optimization.totalResponses} of {totalPlayers} players have responded.</strong>
+                                                {' '}
+                                                We are waiting for {waitingNames}.
+                                                {optimization.noneWorkCount > 0 && (
+                                                    <>
+                                                        <br/><br/>
+                                                        <span style={{ color: 'var(--terracotta)', fontWeight: 600 }}>
+                                                            {optimization.noneWorkPlayers.map(p => p.name).join(' and ')} {optimization.noneWorkCount === 1 ? 'has' : 'have'} responded but cannot play at all this week.
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </>
+                                        );
+                                    }
+                                })()}
+                            </div>
+
+                            <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '22px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                Time Slot Availability
+                            </h3>
+
+                            {optimization.slotAnalysis.map((sa) => (
+                                <div key={sa.slot.id} className={`slot-card ${sa.status}`}>
+                                    <div className="slot-header">
+                                        <span className="slot-time">
+                                            {sa.slot.day} {formatTime(sa.slot.startTime)}-{formatTime(sa.slot.endTime)}
+                                        </span>
+                                        <span>
+                                            <span className="slot-count">{sa.count + 1}</span>
+                                            <span style={{ fontSize: '20px', marginLeft: '8px' }}>{sa.rating}</span>
+                                        </span>
+                                    </div>
+                                    <div className="slot-players">
+                                        <strong>Available:</strong> Martha{sa.available.length > 0 ? ', ' + sa.available.map(p => p.name.split(' ')[0]).join(', ') : ''}
+                                    </div>
+                                    {sa.maybe.length > 0 && (
+                                        <div className="slot-players" style={{ marginTop: '6px' }}>
+                                            <strong>Maybe:</strong> {sa.maybe.map(p => p.name.split(' ')[0]).join(', ')}
+                                        </div>
+                                    )}
+                                    {(sa.available.some(p => p.note) || sa.maybe.some(p => p.note)) && (
+                                        <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--sage)' }}>
+                                            <strong>Notes:</strong>
+                                            <ul style={{ marginTop: '4px', paddingLeft: '20px' }}>
+                                                {[...sa.available, ...sa.maybe].filter(p => p.note).map(p => (
+                                                    <li key={p.id}>{p.name.split(' ')[0]}: {p.note}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    <div style={{ marginTop: '8px', fontWeight: 600, color: sa.status === 'minimum' ? 'var(--terracotta)' : 'var(--forest)' }}>
+                                        {sa.description}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                Coverage Scenarios
+                            </div>
+
+                            <div className="coverage-grid">
+                                {optimization.scenarios.map((scenario, idx) => (
+                                    <div key={idx} className="coverage-card">
+                                        <h4 style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--forest)' }}>
+                                            Host {scenario.slots.length} session{scenario.slots.length > 1 ? 's' : ''}
+                                        </h4>
+                                        <div style={{ fontSize: '14px', color: 'var(--sage)', marginBottom: '8px' }}>
+                                            {(() => {
+                                                const dayOrder = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7 };
+                                                const sorted = [...scenario.slots].sort((a, b) => (dayOrder[a.slot.day] || 0) - (dayOrder[b.slot.day] || 0));
+                                                return sorted.map(s => `${s.slot.day} ${formatTime(s.slot.startTime)}-${formatTime(s.slot.endTime)} (${s.count + 1})`).join(', ');
+                                            })()}
+                                        </div>
+                                        <div style={{ fontSize: '15px', fontWeight: 600 }}>
+                                            ✓ {scenario.coverageCount} of {scenario.totalResponses} players play at least once
+                                        </div>
+                                        {scenario.multiplePlay.length > 0 && (
+                                            <div style={{ fontSize: '13px', marginTop: '8px', color: 'var(--sage)' }}>
+                                                Multiple sessions: {[...new Set(scenario.multiplePlay)].join(', ')}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="recommendation-box">
+                                <h3>💡 Full Picture</h3>
+                                <p>
+                                    The optimal scenario is hosting {optimization.scenarios[0]?.slots.length || 1} session{optimization.scenarios[0]?.slots.length > 1 ? 's' : ''} on {' '}
+                                    <strong>{optimization.scenarios[0]?.slots.map(s => s.slot.day).join(' and ')}</strong>, which covers {optimization.scenarios[0]?.coverageCount} players.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <span className="step-number">4</span>
+                                How many times would you like to host this week?
+                            </div>
+
+                            <div className="session-selector">
+                                {[1, 2, 3, 4].map(count => (
+                                    count <= optimization.slotAnalysis.length && (
+                                        <div
+                                            key={count}
+                                            className={`session-option ${marthaPreference === count ? 'selected' : ''}`}
+                                            onClick={() => selectSessions(count)}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={marthaPreference === count}
+                                                readOnly
+                                            />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                                                    {count} Session{count > 1 ? 's' : ''}
+                                                </div>
+                                                <div style={{ fontSize: '13px', color: 'var(--sage)' }}>
+                                                    {optimization.scenarios[count - 1]?.slots.map(s => s.slot.day).join(', ')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                );
+            }
+
+            if (step === 4 && finalPlan) {
+                return (
+                    <div className="card">
+                        <div className="card-header">
+                            <span className="step-number">✓</span>
+                            Your Final Schedule
+                        </div>
+
+                        <div style={{ 
+                            fontSize: '24px', 
+                            fontWeight: 700, 
+                            color: 'var(--forest)', 
+                            marginBottom: '20px',
+                            fontFamily: 'Crimson Pro, serif'
+                        }}>
+                            {(() => {
+                                const data = loadFromStorage(`week_${weekId}`);
+                                return data?.name || '';
+                            })()}
+                        </div>
+
+                        <div style={{ marginBottom: '16px', textAlign: 'right' }}>
+                            <button 
+                                className="btn btn-ghost btn-small"
+                                onClick={() => setStep(3)}
+                            >
+                                ← Back to View Availability
+                            </button>
+                        </div>
+
+                        <div className="alert alert-info">
+                            Hosting {finalPlan.sessions.length} session{finalPlan.sessions.length > 1 ? 's' : ''} this week
+                        </div>
+
+                        {finalPlan.sessions.map((session, idx) => {
+                            // Find if there's a 5-player adjustment for this session
+                            const adjustment = finalPlan.fivePlayerAdjustments?.find(adj => 
+                                adj.session.day === session.slot.day && 
+                                adj.session.startTime === session.slot.startTime
+                            );
+                            
+                            return (
+                            <div key={idx} className="final-plan">
+                                <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '24px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                    {session.slot.day} {formatTime(session.slot.startTime)}-{formatTime(session.slot.endTime)}
+                                </h3>
+                                
+                                {adjustment && (
+                                    <div style={{ 
+                                        background: 'rgba(200, 90, 61, 0.1)', 
+                                        padding: '12px', 
+                                        borderRadius: '8px', 
+                                        marginBottom: '12px',
+                                        borderLeft: '3px solid var(--terracotta)',
+                                        fontSize: '14px'
+                                    }}>
+                                        <strong>📝 Note:</strong> We had 5 available. I eliminated {adjustment.removedPlayer.split(' ')[0]} because {adjustment.sessionCount === 0 ? 'they would have the fewest conflicts' : adjustment.sessionCount === 1 ? 'they already have 1 other session this week' : `they already have ${adjustment.sessionCount} other sessions this week`}.
+                                    </div>
+                                )}
+                                
+                                <div style={{ marginBottom: '12px', fontSize: '15px', color: 'var(--sage)' }}>
+                                    {session.count} players • {session.tables.length} table{session.tables.length > 1 ? 's' : ''}
+                                </div>
+
+                                {session.tables.map((table, tableIdx) => (
+                                    <div key={tableIdx} className="table-assignment">
+                                        <div className="table-assignment-header">
+                                            Table {tableIdx + 1} ({table.length} players)
+                                        </div>
+                                        <div style={{ fontSize: '14px', color: 'var(--charcoal)' }}>
+                                            {table.map(p => p.name.split(' ')[0]).join(', ')}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            );
+                        })}
+
+                        <div style={{ marginTop: '40px', padding: '24px', background: 'rgba(139, 157, 131, 0.1)', borderRadius: '12px' }}>
+                            <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '20px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                📊 This Week's Participation Summary
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
+                                {(() => {
+                                    // Get week data to access all players and responses
+                                    const weekData = loadFromStorage(`week_${weekId}`);
+                                    if (!weekData) return null;
+                                    
+                                    const allPlayers = {};
+                                    
+                                    // Count sessions for each player who's playing
+                                    finalPlan.sessions.forEach(session => {
+                                        session.tables.forEach(table => {
+                                            table.forEach(player => {
+                                                if (!allPlayers[player.id]) {
+                                                    allPlayers[player.id] = { name: player.name, count: 0, status: 'playing' };
+                                                }
+                                                allPlayers[player.id].count++;
+                                            });
+                                        });
+                                    });
+
+                                    // Add players who responded as unavailable
+                                    Object.entries(weekData.responses || {}).forEach(([playerId, response]) => {
+                                        if (response.noneWork && !allPlayers[playerId]) {
+                                            const player = weekData.players.find(p => p.id === playerId);
+                                            if (player) {
+                                                allPlayers[playerId] = { name: player.name, status: 'unavailable' };
+                                            }
+                                        }
+                                    });
+
+                                    // Add players who haven't responded
+                                    weekData.players.forEach(player => {
+                                        if (!allPlayers[player.id] && !weekData.responses[player.id]) {
+                                            allPlayers[player.id] = { name: player.name, status: 'no-response' };
+                                        }
+                                    });
+
+                                    // Sort by name
+                                    const sortedPlayers = Object.values(allPlayers).sort((a, b) => a.name.localeCompare(b.name));
+
+                                    return sortedPlayers.map(player => {
+                                        const playerData = weekData.players.find(p => p.name === player.name);
+                                        const playerId = playerData?.id;
+                                        const response = playerId ? weekData.responses[playerId] : null;
+                                        
+                                        return (
+                                        <div key={player.name} style={{ 
+                                            padding: '12px 16px', 
+                                            background: 'var(--soft-white)', 
+                                            borderRadius: '8px',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}>
+                                            <span 
+                                                style={{ 
+                                                    fontWeight: 600,
+                                                    cursor: response ? 'pointer' : 'default',
+                                                    textDecoration: response ? 'underline' : 'none',
+                                                    color: response ? 'var(--forest)' : 'inherit'
+                                                }}
+                                                onClick={() => {
+                                                    if (!response) return;
+                                                    
+                                                    let details = `${player.name}'s Availability:\n\n`;
+                                                    
+                                                    if (response.noneWork) {
+                                                        details += "None of the times work\n";
+                                                    } else {
+                                                        const availableSlots = [];
+                                                        const maybeSlots = [];
+                                                        
+                                                        weekData.timeSlots.forEach(slot => {
+                                                            const slotLabel = `${slot.day} ${formatTime(slot.startTime)}-${formatTime(slot.endTime)}`;
+                                                            if (response.availability?.[slot.id]) {
+                                                                let label = `✓ ${slotLabel}`;
+                                                                if (response.timeNotes?.[slot.id]) {
+                                                                    label += ` (${response.timeNotes[slot.id]})`;
+                                                                }
+                                                                availableSlots.push(label);
+                                                            } else if (response.maybeSlots?.[slot.id]) {
+                                                                let label = `? ${slotLabel}`;
+                                                                if (response.timeNotes?.[slot.id]) {
+                                                                    label += ` (${response.timeNotes[slot.id]})`;
+                                                                }
+                                                                maybeSlots.push(label);
+                                                            }
+                                                        });
+                                                        
+                                                        if (availableSlots.length > 0) {
+                                                            details += "Available:\n" + availableSlots.join('\n') + '\n\n';
+                                                        }
+                                                        if (maybeSlots.length > 0) {
+                                                            details += "Maybe:\n" + maybeSlots.join('\n') + '\n\n';
+                                                        }
+                                                        
+                                                        details += `Desired sessions per week: ${response.desiredSessions || 1}`;
+                                                    }
+                                                    
+                                                    alert(details);
+                                                }}
+                                            >
+                                                {player.name}
+                                            </span>
+                                            {player.status === 'playing' ? (
+                                                <span style={{ 
+                                                    background: player.count > 1 ? 'var(--terracotta)' : 'var(--sage)',
+                                                    color: 'var(--soft-white)',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '13px',
+                                                    fontWeight: 600
+                                                }}>
+                                                    {player.count} {player.count === 1 ? 'session' : 'sessions'}
+                                                </span>
+                                            ) : player.status === 'unavailable' ? (
+                                                <span style={{ 
+                                                    color: 'var(--terracotta)',
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    fontStyle: 'italic'
+                                                }}>
+                                                    Unavailable this week
+                                                </span>
+                                            ) : (
+                                                <span style={{ 
+                                                    color: 'var(--sage)',
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    fontStyle: 'italic'
+                                                }}>
+                                                    Has not responded yet
+                                                </span>
+                                            )}
+                                        </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '32px', padding: '24px', background: 'var(--soft-white)', borderRadius: '12px', border: '2px solid var(--sage)' }}>
+                            <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '20px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                📱 Message to Send
+                            </h3>
+                            <p style={{ fontSize: '14px', color: 'var(--sage)', marginBottom: '12px' }}>
+                                Copy and paste this message to your group:
+                            </p>
+                            <div style={{ 
+                                background: 'var(--cream)', 
+                                padding: '16px', 
+                                borderRadius: '8px',
+                                fontFamily: 'monospace',
+                                fontSize: '14px',
+                                whiteSpace: 'pre-wrap',
+                                border: '1px solid rgba(139, 157, 131, 0.3)'
+                            }}>
+                                {(() => {
+                                    const weekData = loadFromStorage(`week_${weekId}`);
+                                    if (!weekData) return '';
+                                    
+                                    let message = `Hi everyone! Here's our mahjong schedule for the ${weekData.name}:\n\n`;
+                                    
+                                    finalPlan.sessions.forEach((session, idx) => {
+                                        const day = session.slot.day;
+                                        const time = `${formatTime(session.slot.startTime)}-${formatTime(session.slot.endTime)}`;
+                                        const playerNames = ['Martha'];
+                                        
+                                        session.tables.forEach(table => {
+                                            table.forEach(player => {
+                                                if (player.id !== 'martha') {
+                                                    playerNames.push(player.name.split(' ')[0]);
+                                                }
+                                            });
+                                        });
+                                        
+                                        const totalPlayers = playerNames.length;
+                                        message += `${day} ${time}: ${playerNames.join(', ')} (${totalPlayers})\n`;
+                                    });
+                                    
+                                    message += `\nSee you at the tables! 🀄`;
+                                    
+                                    return message;
+                                })()}
+                            </div>
+                            <button 
+                                className="btn btn-primary"
+                                style={{ marginTop: '12px' }}
+                                onClick={() => {
+                                    const weekData = loadFromStorage(`week_${weekId}`);
+                                    if (!weekData) return;
+                                    
+                                    let message = `Hi everyone! Here's our mahjong schedule for the ${weekData.name}:\n\n`;
+                                    
+                                    finalPlan.sessions.forEach((session, idx) => {
+                                        const day = session.slot.day;
+                                        const time = `${formatTime(session.slot.startTime)}-${formatTime(session.slot.endTime)}`;
+                                        const playerNames = ['Martha'];
+                                        
+                                        session.tables.forEach(table => {
+                                            table.forEach(player => {
+                                                if (player.id !== 'martha') {
+                                                    playerNames.push(player.name.split(' ')[0]);
+                                                }
+                                            });
+                                        });
+                                        
+                                        const totalPlayers = playerNames.length;
+                                        message += `${day} ${time}: ${playerNames.join(', ')} (${totalPlayers})\n`;
+                                    });
+                                    
+                                    message += `\nSee you at the tables! 🀄`;
+                                    
+                                    navigator.clipboard.writeText(message);
+                                    alert('Message copied to clipboard!');
+                                }}
+                                style={{ width: '100%' }}
+                            >
+                                📋 Copy Message
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                style={{ marginTop: '16px', width: '100%' }}
+                                onClick={() => window.location.reload()}
+                            >
+                                Create New Week
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        // Player Response View
+        function PlayerView({ weekId, weekData, onRefresh }) {
+            const [playerName, setPlayerName] = useState('');
+            const [availability, setAvailability] = useState({});
+            const [maybeSlots, setMaybeSlots] = useState({});
+            const [timeNotes, setTimeNotes] = useState({});
+            const [noneWork, setNoneWork] = useState(false);
+            const [desiredSessions, setDesiredSessions] = useState(1);
+            const [submitted, setSubmitted] = useState(false);
+            const [existingPlayer, setExistingPlayer] = useState(null);
+
+            useEffect(() => {
+                if (weekData) {
+                    const storedPlayerId = localStorage.getItem(`player_${weekId}`);
+                    if (storedPlayerId && weekData.responses[storedPlayerId]) {
+                        const response = weekData.responses[storedPlayerId];
+                        const player = weekData.players.find(p => p.id === storedPlayerId);
+                        if (player) {
+                            setExistingPlayer(player);
+                            setPlayerName(player.name);
+                            setAvailability(response.availability || {});
+                            setMaybeSlots(response.maybeSlots || {});
+                            setTimeNotes(response.timeNotes || {});
+                            setNoneWork(response.noneWork || false);
+                            setDesiredSessions(response.desiredSessions || 1);
+                            setSubmitted(true);
+                        }
+                    }
+                }
+            }, [weekData, weekId]);
+
+            const toggleAvailability = (slotId) => {
+                setAvailability(prev => ({
+                    ...prev,
+                    [slotId]: !prev[slotId]
+                }));
+                if (!availability[slotId]) {
+                    setMaybeSlots(prev => ({
+                        ...prev,
+                        [slotId]: false
+                    }));
+                }
+            };
+
+            const toggleMaybe = (slotId) => {
+                setMaybeSlots(prev => ({
+                    ...prev,
+                    [slotId]: !prev[slotId]
+                }));
+                if (!maybeSlots[slotId]) {
+                    setAvailability(prev => ({
+                        ...prev,
+                        [slotId]: false
+                    }));
+                }
+            };
+
+            const updateTimeNote = (slotId, note) => {
+                setTimeNotes(prev => ({
+                    ...prev,
+                    [slotId]: note
+                }));
+            };
+
+            const submitResponse = () => {
+                let playerId = existingPlayer?.id;
+                
+                if (!playerId) {
+                    const player = weekData.players.find(p => p.name === playerName);
+                    playerId = player?.id || generateId();
+                    
+                    if (!player) {
+                        weekData.players.push({ id: playerId, name: playerName });
+                        weekData.players.sort((a, b) => a.name.localeCompare(b.name));
+                    }
+                }
+
+                weekData.responses[playerId] = {
+                    availability,
+                    maybeSlots,
+                    timeNotes,
+                    noneWork,
+                    desiredSessions,
+                    submittedAt: new Date().toISOString()
+                };
+
+                saveToStorage(`week_${weekId}`, weekData);
+                localStorage.setItem(`player_${weekId}`, playerId);
+                
+                setSubmitted(true);
+                onRefresh();
+            };
+
+            if (!weekData) {
+                return (
+                    <div className="card">
+                        <div className="alert alert-warning">
+                            Schedule not found. Please check your link.
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        {weekData.name || 'Mahjong Schedule'}
+                    </div>
+
+                    {!submitted ? (
+                        <>
+                            <div className="alert alert-info" style={{ fontWeight: 700, fontSize: '16px' }}>
+                                Martha wants to know when you're available to play!
+                            </div>
+
+                            <div className="form-group">
+                                <label>Your Name</label>
+                                <select
+                                    value={playerName}
+                                    onChange={(e) => setPlayerName(e.target.value)}
+                                >
+                                    <option value="">Select your name</option>
+                                    {weekData.players.map(player => (
+                                        <option key={player.id} value={player.name}>
+                                            {player.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Check times you're available</label>
+                                <table className="availability-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time Slot</th>
+                                            <th style={{ textAlign: 'center', width: '100px' }}>Available</th>
+                                            <th style={{ textAlign: 'center', width: '100px' }}>Maybe</th>
+                                            <th>Notes (if limited availability)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weekData.timeSlots.map(slot => (
+                                            <tr key={slot.id}>
+                                                <td>
+                                                    <strong>{slot.day}</strong><br/>
+                                                    <span style={{ fontSize: '13px', color: 'var(--sage)' }}>
+                                                        {formatTime(slot.startTime)}-{formatTime(slot.endTime)}
+                                                    </span>
+                                                </td>
+                                                <td className="checkbox-cell">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={availability[slot.id] || false}
+                                                        onChange={() => toggleAvailability(slot.id)}
+                                                        disabled={noneWork}
+                                                    />
+                                                </td>
+                                                <td className="checkbox-cell">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={maybeSlots[slot.id] || false}
+                                                        onChange={() => toggleMaybe(slot.id)}
+                                                        disabled={noneWork}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        value={timeNotes[slot.id] || ''}
+                                                        onChange={(e) => updateTimeNote(slot.id, e.target.value)}
+                                                        placeholder="e.g., only until 1:45pm"
+                                                        style={{ 
+                                                            padding: '6px 10px',
+                                                            fontSize: '13px',
+                                                            background: 'var(--cream)',
+                                                            width: '100%'
+                                                        }}
+                                                        disabled={noneWork || (!availability[slot.id] && !maybeSlots[slot.id])}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        <tr style={{ background: 'rgba(200, 90, 61, 0.05)' }}>
+                                            <td colSpan="4" style={{ padding: '16px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', textTransform: 'none', cursor: 'pointer', margin: 0 }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={noneWork}
+                                                        onChange={(e) => {
+                                                            setNoneWork(e.target.checked);
+                                                            if (e.target.checked) {
+                                                                setAvailability({});
+                                                                setMaybeSlots({});
+                                                            }
+                                                        }}
+                                                        style={{ width: '22px', height: '22px' }}
+                                                    />
+                                                    <span style={{ fontWeight: 600, fontSize: '15px' }}>None of these times work for me</span>
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style={{ fontSize: '13px', color: 'var(--sage)', marginTop: '8px', fontStyle: 'italic' }}>
+                                    💡 Check "Maybe" if you can play if needed to fill a table
+                                </div>
+                            </div>
+
+                            {!noneWork && (
+                                <div className="form-group">
+                                    <label>Ideally, how many times would you like to play this week?</label>
+                                    <select
+                                        value={desiredSessions}
+                                        onChange={(e) => setDesiredSessions(Number(e.target.value))}
+                                        style={{ width: '200px' }}
+                                    >
+                                        <option value={1}>1 time</option>
+                                        <option value={2}>2 times</option>
+                                        <option value={3}>3 times</option>
+                                        <option value={4}>4 times</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            <button
+                                className="btn btn-primary"
+                                onClick={submitResponse}
+                                disabled={!playerName || (!noneWork && Object.keys(availability).length === 0 && Object.keys(maybeSlots).length === 0)}
+                            >
+                                Submit Availability
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="alert alert-info" style={{ background: 'rgba(139, 157, 131, 0.2)' }}>
+                                ✓ Thanks, {playerName}! Your availability has been submitted.
+                            </div>
+
+                            {noneWork ? (
+                                <div style={{ padding: '20px', background: 'var(--cream)', borderRadius: '8px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--terracotta)' }}>
+                                        None of these times work for you
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: 'var(--sage)', marginTop: '8px' }}>
+                                        Martha has been notified
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <h3 style={{ fontFamily: 'Crimson Pro', fontSize: '20px', marginTop: '24px', marginBottom: '16px', color: 'var(--forest)' }}>
+                                        Your Response:
+                                    </h3>
+                                    
+                                    {Object.keys(availability).some(key => availability[key]) && (
+                                        <>
+                                            <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: 'var(--forest)' }}>
+                                                ✓ Available:
+                                            </h4>
+                                            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
+                                                {weekData.timeSlots
+                                                    .filter(slot => availability[slot.id])
+                                                    .map(slot => (
+                                                        <li key={slot.id} style={{ 
+                                                            padding: '12px', 
+                                                            background: 'var(--cream)', 
+                                                            marginBottom: '8px', 
+                                                            borderRadius: '8px',
+                                                            borderLeft: '4px solid var(--forest)'
+                                                        }}>
+                                                            <strong>{slot.day}</strong> {formatTime(slot.startTime)}-{formatTime(slot.endTime)}
+                                                            {timeNotes[slot.id] && (
+                                                                <div style={{ fontSize: '13px', color: 'var(--sage)', marginTop: '4px' }}>
+                                                                    📝 {timeNotes[slot.id]}
+                                                                </div>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </>
+                                    )}
+
+                                    {Object.keys(maybeSlots).some(key => maybeSlots[key]) && (
+                                        <>
+                                            <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: 'var(--forest)' }}>
+                                                🤔 Maybe (if needed):
+                                            </h4>
+                                            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
+                                                {weekData.timeSlots
+                                                    .filter(slot => maybeSlots[slot.id])
+                                                    .map(slot => (
+                                                        <li key={slot.id} style={{ 
+                                                            padding: '12px', 
+                                                            background: 'var(--cream)', 
+                                                            marginBottom: '8px', 
+                                                            borderRadius: '8px',
+                                                            borderLeft: '4px solid var(--terracotta)'
+                                                        }}>
+                                                            <strong>{slot.day}</strong> {formatTime(slot.startTime)}-{formatTime(slot.endTime)}
+                                                            {timeNotes[slot.id] && (
+                                                                <div style={{ fontSize: '13px', color: 'var(--sage)', marginTop: '4px' }}>
+                                                                    📝 {timeNotes[slot.id]}
+                                                                </div>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </>
+                                    )}
+                                    
+                                    <p style={{ marginTop: '16px', fontSize: '14px', color: 'var(--sage)' }}>
+                                        Preferred sessions per week: {desiredSessions}
+                                    </p>
+                                </>
+                            )}
+
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setSubmitted(false)}
+                                style={{ marginTop: '24px' }}
+                            >
+                                Edit My Response
+                            </button>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
