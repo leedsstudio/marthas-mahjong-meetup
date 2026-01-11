@@ -1604,7 +1604,24 @@ ${shareLink}`}
                                         borderLeft: '3px solid var(--terracotta)',
                                         fontSize: '14px'
                                     }}>
-                                        <strong>📝 Note:</strong> We had 5 available. I eliminated {adjustment.removedPlayer.split(' ')[0]} because {adjustment.sessionCount === 0 ? 'they would have the fewest conflicts' : `they already have ${adjustment.sessionCount} session${adjustment.sessionCount === 1 ? '' : 's'} (wanted ${adjustment.desiredCount})`}.
+                                        <strong>📝 Note:</strong> We had 5 available. I eliminated {adjustment.removedPlayer.split(' ')[0]} because {(() => {
+                                            // Count how many total sessions this player ended up with
+                                            const playerName = adjustment.removedPlayer;
+                                            let finalCount = 0;
+                                            finalPlan.sessions.forEach(s => {
+                                                s.tables.forEach(table => {
+                                                    if (table.some(p => p.name === playerName)) {
+                                                        finalCount++;
+                                                    }
+                                                });
+                                            });
+                                            
+                                            if (finalCount === 0) {
+                                                return 'they would have had their first session';
+                                            } else {
+                                                return `they will have ${finalCount} session${finalCount === 1 ? '' : 's'} of their desired ${adjustment.desiredCount}`;
+                                            }
+                                        })()}.
                                     </div>
                                 )}
                                 
@@ -1622,6 +1639,20 @@ ${shareLink}`}
                                         </div>
                                     </div>
                                 ))}
+                                
+                                {session.maybe && session.maybe.length > 0 && (
+                                    <div style={{ 
+                                        marginTop: '12px', 
+                                        padding: '10px 12px', 
+                                        background: 'rgba(139, 157, 131, 0.1)', 
+                                        borderRadius: '6px',
+                                        fontSize: '13px',
+                                        color: 'var(--sage)',
+                                        fontStyle: 'italic'
+                                    }}>
+                                        💡 FYI: {session.maybe.map(p => p.name.split(' ')[0]).join(', ')} marked this as "maybe"
+                                    </div>
+                                )}
                             </div>
                             );
                         })}
