@@ -1291,9 +1291,11 @@
                             );
                         })()}
 
-                        <div className="form-group">
-                            <label>Your Available Time Slots</label>
-                            {timeSlots.map((slot) => (
+                        {marthaHosting && (
+                            <>
+                                <div className="form-group">
+                                    <label>Your Available Time Slots</label>
+                                    {timeSlots.map((slot) => (
                                 <div key={slot.id} className="time-slot-row">
                                     <select
                                         value={slot.day}
@@ -1420,6 +1422,8 @@
                                 </button>
                             </div>
                         </div>
+                            </>
+                        )}
 
                         <button
                             className="btn btn-primary"
