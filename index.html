@@ -633,7 +633,7 @@
                         setWeekName(data.name);
                         setMarthaHosting(true); // The substitute host IS hosting
                         setSubstituteHost('');
-                        setSubstituteAddress('');
+                        setHostAddress(data.substituteAddress || ''); // Load existing address if any
                         // Pre-fill any existing data if they're coming back
                         if (data.timeSlots?.length > 0) {
                             setTimeSlots(data.timeSlots);
@@ -695,8 +695,8 @@
             const [weekName, setWeekName] = useState('');
             const [timeSlots, setTimeSlots] = useState([{ id: generateId(), day: '', startTime: '', endTime: '' }]);
             const [marthaHosting, setMarthaHosting] = useState(true);
-            const [substituteHost, setSubstituteHost] = useState('Tracy');
-            const [substituteAddress, setSubstituteAddress] = useState('6 Presidio Terrace');
+            const [substituteHost, setSubstituteHost] = useState('');
+            const [hostAddress, setHostAddress] = useState(''); // For substitute host to fill in
             const [players, setPlayers] = useState([
                 'Ann Roberts',
                 'Courtney Klinge Prosnitz',
@@ -758,6 +758,7 @@
                         timeSlots: validSlots,
                         players: players,
                         marthaHosting: false, // Keep Martha as not hosting
+                        substituteAddress: hostAddress, // Save the address the substitute host entered
                         needsSubstituteSetup: false, // Mark setup as complete
                         updatedAt: new Date().toISOString()
                     };
@@ -780,7 +781,7 @@
                         players: existingData?.players || [],
                         marthaHosting: false,
                         substituteHost: substituteHost,
-                        substituteAddress: substituteAddress,
+                        substituteAddress: existingData?.substituteAddress || '', // Will be filled by substitute host
                         responses: existingData?.responses || {},
                         createdAt: existingData?.createdAt || new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
@@ -1241,32 +1242,39 @@
                         </div>
 
                         {!marthaHosting && (
-                            <>
+                            <div className="form-group">
+                                <label>Who will host instead?</label>
+                                <select
+                                    value={substituteHost}
+                                    onChange={(e) => setSubstituteHost(e.target.value)}
+                                    style={{ 
+                                        padding: '12px 16px',
+                                        border: '2px solid rgba(139, 157, 131, 0.3)',
+                                        borderRadius: '8px',
+                                        fontFamily: 'DM Sans, sans-serif',
+                                        fontSize: '15px',
+                                        background: 'var(--cream)',
+                                        color: 'var(--charcoal)',
+                                        width: '100%'
+                                    }}
+                                >
+                                    <option value="">Select a player...</option>
+                                    {players.map(player => (
+                                        <option key={player.id} value={player.name}>{player.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        
+                        {(() => {
+                            const data = weekId ? loadFromStorage(`week_${weekId}`) : null;
+                            return data?.needsSubstituteSetup && (
                                 <div className="form-group">
-                                    <label>Who will host instead?</label>
+                                    <label>Your Address</label>
                                     <input
                                         type="text"
-                                        value={substituteHost}
-                                        onChange={(e) => setSubstituteHost(e.target.value)}
-                                        placeholder="e.g., Tracy"
-                                        style={{ 
-                                            padding: '12px 16px',
-                                            border: '2px solid rgba(139, 157, 131, 0.3)',
-                                            borderRadius: '8px',
-                                            fontFamily: 'DM Sans, sans-serif',
-                                            fontSize: '15px',
-                                            background: 'var(--cream)',
-                                            color: 'var(--charcoal)',
-                                            width: '100%'
-                                        }}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Host's address</label>
-                                    <input
-                                        type="text"
-                                        value={substituteAddress}
-                                        onChange={(e) => setSubstituteAddress(e.target.value)}
+                                        value={hostAddress}
+                                        onChange={(e) => setHostAddress(e.target.value)}
                                         placeholder="e.g., 6 Presidio Terrace"
                                         style={{ 
                                             padding: '12px 16px',
@@ -1280,8 +1288,8 @@
                                         }}
                                     />
                                 </div>
-                            </>
-                        )}
+                            );
+                        })()}
 
                         <div className="form-group">
                             <label>Your Available Time Slots</label>
@@ -1416,7 +1424,7 @@
                         <button
                             className="btn btn-primary"
                             onClick={createWeek}
-                            disabled={!weekName || (marthaHosting && timeSlots.every(s => !s.day)) || (!marthaHosting && !substituteHost.trim())}
+                            disabled={!weekName || (marthaHosting && timeSlots.every(s => !s.day)) || (!marthaHosting && !substituteHost)}
                         >
                             {weekId ? 'Update Schedule' : 'Create Schedule & Generate Link'}
                         </button>
@@ -1455,7 +1463,7 @@
                                     whiteSpace: 'pre-wrap',
                                     border: '2px solid rgba(139, 157, 131, 0.3)'
                                 }}>
-                                    {`Hi ${weekData.substituteHost}! Thanks for hosting mahjong this week at your place${weekData.substituteAddress ? ` (${weekData.substituteAddress})` : ''}. 
+                                    {`Hi ${weekData.substituteHost}! Thanks for hosting mahjong this week. 
 
 Here's a link for you to start the scheduling process:
 
@@ -1466,7 +1474,7 @@ Let me know if you have any questions!`}
                                 <button 
                                     className="btn btn-primary" 
                                     onClick={() => {
-                                        const message = `Hi ${weekData.substituteHost}! Thanks for hosting mahjong this week at your place${weekData.substituteAddress ? ` (${weekData.substituteAddress})` : ''}. \n\nHere's a link for you to start the scheduling process:\n\n${shareLink}\n\nLet me know if you have any questions!`;
+                                        const message = `Hi ${weekData.substituteHost}! Thanks for hosting mahjong this week. \n\nHere's a link for you to start the scheduling process:\n\n${shareLink}\n\nLet me know if you have any questions!`;
                                         navigator.clipboard.writeText(message);
                                         alert('Message copied to clipboard!');
                                     }}
