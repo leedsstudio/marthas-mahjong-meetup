@@ -624,27 +624,33 @@
                 
                 if (id) {
                     setWeekId(id);
+                    
+                    // Always load data first
                     const data = loadFromStorage(`week_${id}`);
                     
                     // If this is a substitute host link and the week needs setup
-                    if (isSubHost && data?.needsSubstituteSetup) {
+                    if (isSubHost && data && data.needsSubstituteSetup === true) {
                         setView('martha');
                         setShowCreateForm(true);
-                        setWeekName(data.name);
+                        setWeekName(data.name || '');
                         setMarthaHosting(true); // The substitute host IS hosting
                         setSubstituteHost('');
                         setHostAddress(data.substituteAddress || ''); // Load existing address if any
                         // Pre-fill any existing data if they're coming back
-                        if (data.timeSlots?.length > 0) {
+                        if (data.timeSlots && data.timeSlots.length > 0) {
                             setTimeSlots(data.timeSlots);
                         }
-                        if (data.players?.length > 0) {
+                        if (data.players && data.players.length > 0) {
                             setPlayers(data.players);
                         }
                         setLoading(false);
                     } else {
+                        // Normal player view
                         setView('player');
-                        loadWeekData(id);
+                        if (data) {
+                            setWeekData(data);
+                        }
+                        setLoading(false);
                     }
                 } else {
                     setView('martha');
@@ -778,7 +784,7 @@
                         id: id,
                         name: weekName,
                         timeSlots: existingData?.timeSlots || [],
-                        players: existingData?.players || [],
+                        players: existingData?.players || players, // Use current players list as default
                         marthaHosting: false,
                         substituteHost: substituteHost,
                         substituteAddress: existingData?.substituteAddress || '', // Will be filled by substitute host
